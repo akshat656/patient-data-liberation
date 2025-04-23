@@ -65,8 +65,8 @@ const Header = () => {
             <nav className="flex flex-col space-y-2">
               {menuItems.map((item) => (
                 <Link key={item.name} to={item.path} onClick={toggleMenu}>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="w-full justify-start text-gray-600 hover:text-medical-purple hover:bg-gray-50"
                   >
                     <item.icon size={16} className="mr-2" />
@@ -86,3 +86,4 @@ const Header = () => {
 };
 
 export default Header;
+
