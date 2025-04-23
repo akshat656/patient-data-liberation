@@ -98,4 +98,20 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  .medical-card {
+    @apply bg-white rounded-lg shadow-md p-4 border border-gray-100 transition-all hover:shadow-lg;
+  }
+  
+  .medical-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .page-title {
+    @apply text-3xl font-bold text-medical-dark mb-6;
+  }
+  
+  .section-title {
+    @apply text-xl font-semibold text-medical-purple mb-4;
+  }
 }
