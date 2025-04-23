@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Records from "./pages/Records";
 import Providers from "./pages/Providers";
 import Blockchain from "./pages/Blockchain";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import RequireAuth from "@/components/RequireAuth";
@@ -58,6 +59,14 @@ const App = () => (
                 </RequireAuth>
               }
             />
+            <Route
+              path="/settings"
+              element={
+                <RequireAuth>
+                  <Settings />
+                </RequireAuth>
+              }
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -68,4 +77,3 @@ const App = () => (
 );
 
 export default App;
-
