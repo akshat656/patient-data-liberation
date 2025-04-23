@@ -1,13 +1,13 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { Lock, LogIn, EyeOff, Eye, UserPlus, User, HospitalIcon } from "lucide-react";
+import { Lock, LogIn, EyeOff, Eye, UserPlus, User, HospitalIcon, mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 type AuthMode = "patient" | "provider";
 type UserType = "patient" | "doctor" | "hospital" | "insurer";
@@ -22,9 +22,11 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSending, setForgotSending] = useState(false);
 
   useEffect(() => {
-    // If already logged in, redirect to dashboard
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate("/dashboard", { replace: true });
     });
@@ -55,13 +57,12 @@ const Login = () => {
     try {
       let result;
       
-      // If registering, add user type metadata for the blockchain identity
       const metadata = {
         userType: authMode === "patient" ? "patient" : userType,
         name: name || undefined
       };
       
-      if (email.includes("new")) { // Simulate registration (in a real app we'd properly distinguish)
+      if (email.includes("new")) {
         result = await supabase.auth.signUp({ 
           email, 
           password,
@@ -95,6 +96,30 @@ const Login = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotSending(true);
+    if (!forgotEmail) {
+      toast.error("Please enter your email address.");
+      setForgotSending(false);
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: window.location.origin + "/login"
+      });
+      if (error) {
+        toast.error("Password reset failed: " + error.message);
+      } else {
+        toast.success("Password reset email sent! Check your inbox.");
+        setForgotOpen(false);
+      }
+    } catch (err: any) {
+      toast.error("Something went wrong: " + (err?.message || ""));
+    }
+    setForgotSending(false);
   };
 
   return (
@@ -152,6 +177,54 @@ const Login = () => {
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
+                </div>
+                <div className="text-right mt-1">
+                  <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+                    <DialogTrigger asChild>
+                      <button
+                        type="button"
+                        className="text-medical-blue hover:underline text-xs font-medium"
+                        style={{
+                          color: "#1EAEDB"
+                        }}
+                      >
+                        Forgot password?
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Reset your password</DialogTitle>
+                        <DialogDescription>
+                          Enter your email and we&apos;ll send you a link to reset your password.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleForgotPassword} className="space-y-4 pt-2">
+                        <div>
+                          <label className="block text-sm font-medium text-medical-dark mb-2">
+                            Email Address
+                          </label>
+                          <Input
+                            type="email"
+                            placeholder="your@email.com"
+                            value={forgotEmail}
+                            onChange={(e) => setForgotEmail(e.target.value)}
+                            required
+                            disabled={forgotSending}
+                          />
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            type="submit"
+                            className="w-full bg-medical-blue hover:bg-blue-700 text-white"
+                            disabled={forgotSending}
+                          >
+                            <mail className="mr-2" size={16} />
+                            Send reset link
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
               
