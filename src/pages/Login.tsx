@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -25,11 +26,22 @@ const Login = () => {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSending, setForgotSending] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate("/dashboard", { replace: true });
     });
+
+    // Check if this is a password reset URL
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get("token");
+    const type = url.searchParams.get("type");
+    
+    if (token && type === "recovery") {
+      // Handle password reset flow
+      toast.info("Please enter your new password below");
+    }
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -108,13 +120,14 @@ const Login = () => {
     }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: window.location.origin + "/login"
+        redirectTo: `${window.location.origin}/login`
       });
+      
       if (error) {
         toast.error("Password reset failed: " + error.message);
       } else {
         toast.success("Password reset email sent! Check your inbox.");
-        setForgotOpen(false);
+        setResetSent(true);
       }
     } catch (err: any) {
       toast.error("Something went wrong: " + (err?.message || ""));
