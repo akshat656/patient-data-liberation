@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,8 @@ import {
   Activity, 
   Settings,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AccountMenu from "./AccountMenu";

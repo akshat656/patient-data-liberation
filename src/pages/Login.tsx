@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { Lock, LogIn, EyeOff, Eye, UserPlus, User, HospitalIcon, mail } from "lucide-react";
+import { Lock, LogIn, EyeOff, Eye, UserPlus, User, HospitalIcon, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -218,7 +218,7 @@ const Login = () => {
                             className="w-full bg-medical-blue hover:bg-blue-700 text-white"
                             disabled={forgotSending}
                           >
-                            <mail className="mr-2" size={16} />
+                            <Mail className="mr-2" size={16} />
                             Send reset link
                           </Button>
                         </DialogFooter>
