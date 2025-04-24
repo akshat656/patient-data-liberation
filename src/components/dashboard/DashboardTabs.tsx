@@ -15,8 +15,8 @@ interface DashboardTabsProps {
 
 export function DashboardTabs({ recentRecords, upcomingAppointments, onShareRecord }: DashboardTabsProps) {
   return (
-    <Tabs defaultValue="records">
-      <TabsList className="mb-6">
+    <Tabs defaultValue="records" className="mt-6">
+      <TabsList className="mb-6 w-full md:w-auto">
         <TabsTrigger value="records">Recent Records</TabsTrigger>
         <TabsTrigger value="appointments">Upcoming Appointments</TabsTrigger>
         <TabsTrigger value="blockchain">Blockchain Status</TabsTrigger>
@@ -47,6 +47,10 @@ export function DashboardTabs({ recentRecords, upcomingAppointments, onShareReco
           {upcomingAppointments.map((apt) => (
             <AppointmentCard key={apt.id} {...apt} />
           ))}
+          
+          {upcomingAppointments.length === 0 && (
+            <p className="text-gray-500 text-center py-4">No upcoming appointments</p>
+          )}
           
           <div className="mt-6 text-center">
             <Button variant="outline" asChild>
