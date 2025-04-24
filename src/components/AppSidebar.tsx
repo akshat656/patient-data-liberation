@@ -2,7 +2,7 @@
 import {
   FileText,
   Users,
-  Block,
+  Blocks,  // Changed from Block to Blocks
   Settings,
   UserPlus,
 } from "lucide-react";
@@ -32,7 +32,7 @@ const menuItems = [
   {
     title: "Blockchain",
     url: "/blockchain",
-    icon: Block,
+    icon: Blocks,  // Updated to Blocks
   },
   {
     title: "Settings",
