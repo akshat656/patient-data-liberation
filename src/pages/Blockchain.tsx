@@ -1,34 +1,15 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlockchainStatus from "@/components/BlockchainStatus";
-import { 
-  ArrowRight, 
-  Search, 
-  Shield, 
-  Activity, 
-  Clock, 
-  FileCheck,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
-import { verifyBlockchainRecord, searchBlockchainData } from "@/utils/blockchainUtils";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import VerificationForm from "@/components/blockchain/VerificationForm";
+import TransactionsList from "@/components/blockchain/TransactionsList";
+import BlocksList from "@/components/blockchain/BlocksList";
+import { BlockchainTransaction, BlockchainBlock } from "@/types/blockchain";
 
 // Mock blockchain transactions
-const blockchainTransactions = [
+const blockchainTransactions: BlockchainTransaction[] = [
   {
     id: "tx123",
     type: "Record Added",
@@ -65,7 +46,7 @@ const blockchainTransactions = [
 ];
 
 // Mock blockchain blocks
-const blockchainBlocks = [
+const blockchainBlocks: BlockchainBlock[] = [
   {
     number: 2456789,
     timestamp: "2023-11-15T14:35:10",
@@ -89,61 +70,7 @@ const blockchainBlocks = [
   }
 ];
 
-const ITEMS_PER_PAGE = 3;
-
 const Blockchain = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [verifyTerm, setVerifyTerm] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const { toast } = useToast();
-  
-  const formatHash = (hash: string) => {
-    return `${hash.substring(0, 10)}...${hash.substring(hash.length - 8)}`;
-  };
-
-  const handleVerify = async () => {
-    if (!verifyTerm) {
-      toast({
-        title: "Error",
-        description: "Please enter a record ID or blockchain hash",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsVerifying(true);
-    try {
-      const result = await verifyBlockchainRecord(verifyTerm);
-      toast({
-        title: result.isValid ? "Success" : "Verification Failed",
-        description: result.message,
-        variant: result.isValid ? "default" : "destructive",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during verification",
-        variant: "destructive",
-      });
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  // Filter and paginate transactions
-  const filteredTransactions = searchBlockchainData(
-    blockchainTransactions,
-    searchTerm,
-    ['recordTitle', 'type', 'hash']
-  );
-  const paginatedTransactions = filteredTransactions.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-  
-  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
-  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -164,37 +91,7 @@ const Blockchain = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="section-title">Verify Record</h2>
             </div>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-grow relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input 
-                      placeholder="Enter record ID or blockchain hash..." 
-                      className="pl-10"
-                      value={verifyTerm}
-                      onChange={(e) => setVerifyTerm(e.target.value)}
-                    />
-                  </div>
-                  <Button 
-                    className="bg-medical-green hover:bg-green-700"
-                    onClick={handleVerify}
-                    disabled={isVerifying}
-                  >
-                    <Shield className="h-4 w-4 mr-1" />
-                    {isVerifying ? "Verifying..." : "Verify Authenticity"}
-                  </Button>
-                </div>
-                
-                <div className="flex items-center mt-4 bg-blue-50 text-blue-800 p-3 rounded-md">
-                  <FileCheck className="h-5 w-5 mr-2 flex-shrink-0" />
-                  <p className="text-sm">
-                    Enter a record ID or blockchain hash to verify its authenticity and integrity on the blockchain.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <VerificationForm />
           </div>
           
           <Tabs defaultValue="transactions">
@@ -203,126 +100,12 @@ const Blockchain = () => {
               <TabsTrigger value="blocks">Recent Blocks</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="transactions" className="space-y-4">
-              <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input 
-                    placeholder="Search transactions..." 
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {paginatedTransactions.map((tx) => (
-                <Card key={tx.id} className="overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="flex flex-col md:flex-row">
-                      <div className={`w-full md:w-1 ${
-                        tx.status === "confirmed" ? "bg-medical-green" : "bg-amber-500"
-                      }`}></div>
-                      <div className="p-4 md:p-5 w-full">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center">
-                            <Activity className="h-4 w-4 text-medical-purple mr-2" />
-                            <h3 className="font-medium">{tx.type}</h3>
-                            <span className="bg-medical-purple/10 text-medical-purple text-xs px-2 py-0.5 rounded ml-2">
-                              {tx.status}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-gray-500 text-sm">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {new Date(tx.timestamp).toLocaleString()}
-                          </div>
-                        </div>
-                        
-                        <p className="text-sm mb-2">
-                          <span className="font-medium text-gray-500">Record: </span>
-                          {tx.recordTitle}
-                          {tx.recipient && (
-                            <span className="ml-2">
-                              <ArrowRight className="h-3 w-3 mx-1 inline" />
-                              {tx.recipient}
-                            </span>
-                          )}
-                        </p>
-                        
-                        <div className="bg-gray-50 p-2 rounded font-mono text-xs overflow-x-auto">
-                          {tx.hash}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {filteredTransactions.length > ITEMS_PER_PAGE && (
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                      />
-                    </PaginationItem>
-                    {[...Array(totalPages)].map((_, i) => (
-                      <PaginationItem key={i + 1}>
-                        <PaginationLink
-                          onClick={() => setCurrentPage(i + 1)}
-                          isActive={currentPage === i + 1}
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              )}
+            <TabsContent value="transactions">
+              <TransactionsList transactions={blockchainTransactions} />
             </TabsContent>
             
             <TabsContent value="blocks">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Block</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Time</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Txs</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Size</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">Hash</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {blockchainBlocks.map((block) => (
-                      <tr key={block.number} className="bg-white hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm font-medium text-medical-purple">
-                          #{block.number.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {new Date(block.timestamp).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {block.transactions}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {block.size}
-                        </td>
-                        <td className="px-4 py-3 text-xs font-mono text-gray-500">
-                          {formatHash(block.hash)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <BlocksList blocks={blockchainBlocks} />
             </TabsContent>
           </Tabs>
         </div>
