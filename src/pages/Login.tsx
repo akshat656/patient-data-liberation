@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -30,8 +29,8 @@ const patientSchema = z.object({
   address: z.string().optional(),
   medicalHistory: z.string().optional(),
   emergencyContact: z.string().optional(),
-  agreeTerms: z.literal(true, {
-    errorMap: () => ({ message: "You must agree to the terms and conditions" }),
+  agreeTerms: z.boolean().refine(value => value === true, {
+    message: "You must agree to the terms and conditions",
   }),
 });
 
@@ -44,8 +43,8 @@ const providerSchema = z.object({
   address: z.string().optional(),
   specialization: z.string().optional(),
   licenseNumber: z.string().optional(),
-  agreeTerms: z.literal(true, {
-    errorMap: () => ({ message: "You must agree to the verification process" }),
+  agreeTerms: z.boolean().refine(value => value === true, {
+    message: "You must agree to the verification process",
   }),
 });
 
@@ -99,7 +98,6 @@ const Login = () => {
       if (session) navigate("/dashboard", { replace: true });
     });
 
-    // Check if this is a password reset URL
     const url = new URL(window.location.href);
     const token = url.searchParams.get("token");
     const type = url.searchParams.get("type");
@@ -154,7 +152,6 @@ const Login = () => {
         toast.error("Password reset failed: " + error.message);
       } else {
         toast.success("Password has been reset successfully!");
-        // Clear the URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
         setIsResetMode(false);
         setTimeout(() => navigate("/login", { replace: true }), 1000);
@@ -265,7 +262,6 @@ const Login = () => {
     setForgotSending(false);
   };
 
-  // If in password reset mode, show the reset form
   if (isResetMode) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-medical-light px-4 py-8">
