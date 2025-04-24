@@ -1,12 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ShareRecordModal from "@/components/ShareRecordModal";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { QuickStats } from "@/components/dashboard/QuickStats";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 
@@ -76,42 +73,37 @@ const Dashboard = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gray-50">
-        <AppSidebar />
-        <div className="flex-1">
-          <Header />
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <main className="flex-grow py-8 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-wrap items-center justify-between mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Patient Dashboard</h1>
+            <Button className="bg-medical-purple hover:bg-purple-700">
+              <Plus size={16} className="mr-1" /> Add New Record
+            </Button>
+          </div>
           
-          <main className="flex-grow py-8 px-4 md:px-8">
-            <div className="max-w-7xl mx-auto">
-              <div className="flex flex-wrap items-center justify-between mb-8">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Patient Dashboard</h1>
-                <Button className="bg-medical-purple hover:bg-purple-700">
-                  <Plus size={16} className="mr-1" /> Add New Record
-                </Button>
-              </div>
-              
-              <QuickStats />
-              <DashboardTabs 
-                recentRecords={recentRecords}
-                upcomingAppointments={upcomingAppointments}
-                onShareRecord={handleShareRecord}
-              />
-            </div>
-          </main>
-          
-          <Footer />
-          
-          {selectedRecord && (
-            <ShareRecordModal 
-              isOpen={isShareModalOpen}
-              onClose={() => setIsShareModalOpen(false)}
-              recordTitle={selectedRecord.title}
-            />
-          )}
+          <QuickStats />
+          <DashboardTabs 
+            recentRecords={recentRecords}
+            upcomingAppointments={upcomingAppointments}
+            onShareRecord={handleShareRecord}
+          />
         </div>
-      </div>
-    </SidebarProvider>
+      </main>
+      
+      <Footer />
+      
+      {selectedRecord && (
+        <ShareRecordModal 
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          recordTitle={selectedRecord.title}
+        />
+      )}
+    </div>
   );
 };
 
