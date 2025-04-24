@@ -1,13 +1,31 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BlockchainStatus from "@/components/BlockchainStatus";
-import { ArrowRight, Search, Shield, Activity, Clock, FileCheck } from "lucide-react";
+import { 
+  ArrowRight, 
+  Search, 
+  Shield, 
+  Activity, 
+  Clock, 
+  FileCheck,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
+import { verifyBlockchainRecord, searchBlockchainData } from "@/utils/blockchainUtils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Mock blockchain transactions
 const blockchainTransactions = [
@@ -71,12 +89,60 @@ const blockchainBlocks = [
   }
 ];
 
+const ITEMS_PER_PAGE = 3;
+
 const Blockchain = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [verifyTerm, setVerifyTerm] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const { toast } = useToast();
   
   const formatHash = (hash: string) => {
     return `${hash.substring(0, 10)}...${hash.substring(hash.length - 8)}`;
   };
+
+  const handleVerify = async () => {
+    if (!verifyTerm) {
+      toast({
+        title: "Error",
+        description: "Please enter a record ID or blockchain hash",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const result = await verifyBlockchainRecord(verifyTerm);
+      toast({
+        title: result.isValid ? "Success" : "Verification Failed",
+        description: result.message,
+        variant: result.isValid ? "default" : "destructive",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during verification",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // Filter and paginate transactions
+  const filteredTransactions = searchBlockchainData(
+    blockchainTransactions,
+    searchTerm,
+    ['recordTitle', 'type', 'hash']
+  );
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+  
+  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -107,12 +173,17 @@ const Blockchain = () => {
                     <Input 
                       placeholder="Enter record ID or blockchain hash..." 
                       className="pl-10"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      value={verifyTerm}
+                      onChange={(e) => setVerifyTerm(e.target.value)}
                     />
                   </div>
-                  <Button className="bg-medical-green hover:bg-green-700">
-                    <Shield className="h-4 w-4 mr-1" /> Verify Authenticity
+                  <Button 
+                    className="bg-medical-green hover:bg-green-700"
+                    onClick={handleVerify}
+                    disabled={isVerifying}
+                  >
+                    <Shield className="h-4 w-4 mr-1" />
+                    {isVerifying ? "Verifying..." : "Verify Authenticity"}
                   </Button>
                 </div>
                 
@@ -133,7 +204,19 @@ const Blockchain = () => {
             </TabsList>
             
             <TabsContent value="transactions" className="space-y-4">
-              {blockchainTransactions.map((tx) => (
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input 
+                    placeholder="Search transactions..." 
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {paginatedTransactions.map((tx) => (
                 <Card key={tx.id} className="overflow-hidden">
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row">
@@ -174,6 +257,35 @@ const Blockchain = () => {
                   </CardContent>
                 </Card>
               ))}
+
+              {filteredTransactions.length > ITEMS_PER_PAGE && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(i + 1)}
+                          isActive={currentPage === i + 1}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </TabsContent>
             
             <TabsContent value="blocks">
