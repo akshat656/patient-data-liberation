@@ -10,11 +10,12 @@ import {
   Settings,
   Menu,
   X,
-  LogOut
+  Heart
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AccountMenu from "./AccountMenu";
 import { useAuth } from "@/contexts/AuthProvider";
+import { Separator } from "@/components/ui/separator";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,10 +37,10 @@ const Header = () => {
       <div className="medical-container">
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-medical-purple rounded-md flex items-center justify-center">
-              <span className="text-white font-bold">PL</span>
+            <div className="w-8 h-8 bg-gradient-to-r from-medical-purple to-medical-blue rounded-md flex items-center justify-center">
+              <Heart className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl text-medical-dark">MedChain</span>
+            <span className="font-bold text-xl text-medical-dark">MedCord</span>
           </Link>
 
           {isMobile ? (
@@ -47,23 +48,26 @@ const Header = () => {
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </Button>
           ) : (
-            <nav className="flex items-center space-x-1">
-              {menuItems.map((item) => (
-                <Link key={item.name} to={item.path}>
-                  <Button variant="ghost" className="flex items-center space-x-1 text-gray-600 hover:text-medical-purple">
-                    <item.icon size={16} />
-                    <span>{item.name}</span>
-                  </Button>
-                </Link>
-              ))}
-              {user ? (
-                <AccountMenu />
-              ) : (
-                <Link to="/login">
-                  <Button className="ml-4 bg-medical-blue hover:bg-blue-700">Login</Button>
-                </Link>
-              )}
-            </nav>
+            <div className="flex items-center">
+              <Separator orientation="vertical" className="mx-6 h-8" />
+              <nav className="flex items-center space-x-1">
+                {menuItems.map((item) => (
+                  <Link key={item.name} to={item.path}>
+                    <Button variant="ghost" className="flex items-center space-x-1 text-gray-600 hover:text-medical-purple">
+                      <item.icon size={16} />
+                      <span>{item.name}</span>
+                    </Button>
+                  </Link>
+                ))}
+                {user ? (
+                  <AccountMenu />
+                ) : (
+                  <Link to="/login">
+                    <Button className="ml-4 bg-medical-blue hover:bg-blue-700">Login</Button>
+                  </Link>
+                )}
+              </nav>
+            </div>
           )}
         </div>
 
