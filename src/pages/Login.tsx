@@ -204,6 +204,8 @@ const Login = () => {
     setSubmitting(true);
     
     try {
+      console.log("Provider registration data:", data);
+      
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -220,6 +222,8 @@ const Login = () => {
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
+      
+      console.log("Supabase response:", authData, error);
 
       if (error) {
         toast.error(error.message);
@@ -229,6 +233,7 @@ const Login = () => {
         providerForm.reset();
       }
     } catch (error: any) {
+      console.error("Registration error:", error);
       toast.error(error.message || "Registration failed");
     } finally {
       setSubmitting(false);
@@ -835,8 +840,17 @@ const Login = () => {
                     className="w-full bg-medical-blue hover:bg-blue-700 text-white transition-colors"
                     disabled={submitting}
                   >
-                    <UserPlus className="mr-2" />
-                    Register as Provider
+                    {submitting ? (
+                      <>
+                        <span className="animate-spin mr-2">⭐</span>
+                        Registering...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-2" />
+                        Register as Provider
+                      </>
+                    )}
                   </Button>
                   
                   <p className="text-xs text-center text-gray-500 mt-4">
