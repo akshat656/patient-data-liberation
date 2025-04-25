@@ -8,9 +8,24 @@ import ShareRecordModal from "@/components/ShareRecordModal";
 import AddMedicalRecordModal from "@/components/AddMedicalRecordModal";
 import { QuickStats } from "@/components/dashboard/QuickStats";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+
+// Define a type for our medical records
+interface MedicalRecord {
+  id: string;
+  title: string;
+  date: string;
+  provider: string;
+  type: string;
+  verified: boolean;
+  blockchainId?: string;
+  fileData?: string;
+  fileName?: string;
+}
 
 // Mock data for demonstration
-const recentRecords = [
+const recentRecords: MedicalRecord[] = [
   {
     id: "rec123",
     title: "Annual Physical Examination",
@@ -68,24 +83,37 @@ const upcomingAppointments = [
 const Dashboard = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [records, setRecords] = useState(() => {
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
+  const [records, setRecords] = useState<MedicalRecord[]>(() => {
     // Try to load records from localStorage on initial load
     const savedRecords = localStorage.getItem('medicalRecords');
     return savedRecords ? JSON.parse(savedRecords) : recentRecords;
   });
+  const { toast } = useToast();
   
-  const handleShareRecord = (record: any) => {
+  const handleShareRecord = (record: MedicalRecord) => {
     setSelectedRecord(record);
     setIsShareModalOpen(true);
   };
   
-  const handleAddRecord = (newRecord: any) => {
+  const handleViewRecord = (record: MedicalRecord) => {
+    setSelectedRecord(record);
+    setIsViewModalOpen(true);
+    console.log("View record", record.id);
+  };
+  
+  const handleAddRecord = (newRecord: MedicalRecord) => {
     const updatedRecords = [newRecord, ...records];
     setRecords(updatedRecords);
     
     // Save to localStorage to persist across page navigation
     localStorage.setItem('medicalRecords', JSON.stringify(updatedRecords));
+    
+    toast({
+      title: "Record added successfully",
+      description: "Your medical record has been uploaded and is pending verification."
+    });
   };
 
   return (
@@ -109,6 +137,7 @@ const Dashboard = () => {
             recentRecords={records}
             upcomingAppointments={upcomingAppointments}
             onShareRecord={handleShareRecord}
+            onViewRecord={handleViewRecord}
           />
         </div>
       </main>
@@ -121,6 +150,73 @@ const Dashboard = () => {
           onClose={() => setIsShareModalOpen(false)}
           recordTitle={selectedRecord.title}
         />
+      )}
+      
+      {selectedRecord && (
+        <Dialog 
+          open={isViewModalOpen} 
+          onOpenChange={(open) => !open && setIsViewModalOpen(false)}
+        >
+          <DialogContent className="sm:max-w-[600px]">
+            <div className="py-6">
+              <h2 className="text-2xl font-bold mb-4">{selectedRecord.title}</h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <span className="font-medium text-gray-500">Date:</span>
+                  <span>{new Date(selectedRecord.date).toLocaleDateString()}</span>
+                  
+                  <span className="font-medium text-gray-500">Provider:</span>
+                  <span>{selectedRecord.provider}</span>
+                  
+                  <span className="font-medium text-gray-500">Type:</span>
+                  <span>{selectedRecord.type}</span>
+                  
+                  <span className="font-medium text-gray-500">Status:</span>
+                  <span className={selectedRecord.verified ? "text-green-600" : "text-orange-500"}>
+                    {selectedRecord.verified ? "Verified" : "Pending Verification"}
+                  </span>
+                  
+                  {selectedRecord.blockchainId && (
+                    <>
+                      <span className="font-medium text-gray-500">Blockchain ID:</span>
+                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                        {selectedRecord.blockchainId}
+                      </span>
+                    </>
+                  )}
+                </div>
+                
+                {selectedRecord.fileData && (
+                  <div className="mt-4">
+                    <h3 className="font-medium mb-2">Record File:</h3>
+                    {selectedRecord.fileData.startsWith('data:image') ? (
+                      <div className="border rounded-md overflow-hidden">
+                        <img 
+                          src={selectedRecord.fileData} 
+                          alt={selectedRecord.fileName} 
+                          className="max-w-full h-auto"
+                        />
+                      </div>
+                    ) : (
+                      <div className="border rounded-md p-4 bg-gray-50">
+                        <p className="text-sm">
+                          {selectedRecord.fileName} - File preview not available
+                        </p>
+                        <a 
+                          href={selectedRecord.fileData}
+                          download={selectedRecord.fileName}
+                          className="text-medical-blue hover:underline text-sm flex items-center mt-2"
+                        >
+                          Download File
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
       
       <AddMedicalRecordModal
