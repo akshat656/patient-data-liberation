@@ -1,7 +1,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import AppointmentCard from "./AppointmentCard";
+import { AppointmentCard } from "./AppointmentCard";
 import MedicalRecordCard from "@/components/MedicalRecordCard";
 
 interface DashboardTabsProps {
