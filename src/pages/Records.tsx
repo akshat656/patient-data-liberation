@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MedicalRecordCard from "@/components/MedicalRecordCard";
 import ShareRecordModal from "@/components/ShareRecordModal";
+import AddMedicalRecordModal from "@/components/AddMedicalRecordModal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Calendar, FileText, FilePlus2 } from "lucide-react";
+import { searchBlockchainData } from "@/utils/blockchainUtils";
 
 // Mock data for demonstration
 const allRecords = [
@@ -93,23 +95,30 @@ const allRecords = [
 
 const Records = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [recordType, setRecordType] = useState<string>("all");
+  const [records, setRecords] = useState(allRecords);
   
   const handleShareRecord = (record: any) => {
     setSelectedRecord(record);
     setIsShareModalOpen(true);
   };
+
+  const handleAddRecord = (newRecord: any) => {
+    setRecords([newRecord, ...records]);
+  };
   
-  const filteredRecords = allRecords.filter(record => {
-    const matchesSearch = record.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         record.provider.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = recordType === "all" || record.type === recordType;
-    return matchesSearch && matchesType;
+  const filteredRecords = searchBlockchainData(
+    records,
+    searchTerm,
+    ['title', 'provider', 'type']
+  ).filter(record => {
+    return recordType === "all" || record.type === recordType;
   });
   
-  const recordsByYear: Record<string, typeof allRecords> = {};
+  const recordsByYear: Record<string, typeof records> = {};
   
   filteredRecords.forEach(record => {
     const year = new Date(record.date).getFullYear().toString();
@@ -127,7 +136,10 @@ const Records = () => {
         <div className="medical-container">
           <div className="flex flex-wrap items-center justify-between mb-8">
             <h1 className="page-title">Medical Records</h1>
-            <Button className="bg-medical-purple hover:bg-purple-700">
+            <Button 
+              className="bg-medical-purple hover:bg-purple-700"
+              onClick={() => setIsAddModalOpen(true)}
+            >
               <FilePlus2 size={16} className="mr-1" /> Upload New Record
             </Button>
           </div>
@@ -265,6 +277,12 @@ const Records = () => {
           recordTitle={selectedRecord.title}
         />
       )}
+
+      <AddMedicalRecordModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddRecord={handleAddRecord}
+      />
     </div>
   );
 };

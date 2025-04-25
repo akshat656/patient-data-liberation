@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ShareRecordModal from "@/components/ShareRecordModal";
+import AddMedicalRecordModal from "@/components/AddMedicalRecordModal";
 import { QuickStats } from "@/components/dashboard/QuickStats";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 
@@ -65,11 +67,17 @@ const upcomingAppointments = [
 
 const Dashboard = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [records, setRecords] = useState(recentRecords);
   
   const handleShareRecord = (record: any) => {
     setSelectedRecord(record);
     setIsShareModalOpen(true);
+  };
+  
+  const handleAddRecord = (newRecord: any) => {
+    setRecords([newRecord, ...records]);
   };
 
   return (
@@ -80,14 +88,17 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap items-center justify-between mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Patient Dashboard</h1>
-            <Button className="bg-medical-purple hover:bg-purple-700">
+            <Button 
+              className="bg-medical-purple hover:bg-purple-700"
+              onClick={() => setIsAddModalOpen(true)}
+            >
               <Plus size={16} className="mr-1" /> Add New Record
             </Button>
           </div>
           
           <QuickStats />
           <DashboardTabs 
-            recentRecords={recentRecords}
+            recentRecords={records}
             upcomingAppointments={upcomingAppointments}
             onShareRecord={handleShareRecord}
           />
@@ -103,6 +114,12 @@ const Dashboard = () => {
           recordTitle={selectedRecord.title}
         />
       )}
+      
+      <AddMedicalRecordModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddRecord={handleAddRecord}
+      />
     </div>
   );
 };
