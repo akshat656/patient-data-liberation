@@ -8,6 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Plus, UserPlus, Building2, Hospital, Stethoscope, MapPin, Phone, Mail, Clock, Shield } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock providers data
 const providers = [
@@ -83,8 +91,33 @@ const providers = [
   }
 ];
 
+const providerSchema = z.object({
+  name: z.string().min(2, "Provider name is required"),
+  specialty: z.string().min(2, "Specialty is required"),
+  organization: z.string().optional(),
+  address: z.string().min(5, "Address is required"),
+  phone: z.string().min(5, "Phone number is required"),
+  email: z.string().email("Please enter a valid email address"),
+  accessLevel: z.enum(["Full", "Limited", "Specific Records", "None"]),
+});
+
 const Providers = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [addProviderOpen, setAddProviderOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<z.infer<typeof providerSchema>>({
+    resolver: zodResolver(providerSchema),
+    defaultValues: {
+      name: "",
+      specialty: "",
+      organization: "",
+      address: "",
+      phone: "",
+      email: "",
+      accessLevel: "Limited",
+    },
+  });
   
   const filteredProviders = providers.filter(provider =>
     provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,6 +134,42 @@ const Providers = () => {
       case "Limited": return "bg-amber-500";
       case "Specific Records": return "bg-blue-500";
       default: return "bg-gray-400";
+    }
+  };
+  
+  const handleAddProvider = async (data: z.infer<typeof providerSchema>) => {
+    setIsSubmitting(true);
+    
+    try {
+      // In a real app, you would save this to your database
+      // For this example, we'll simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate adding to providers list with current date
+      const newProvider = {
+        id: `prov${providers.length + 1}`,
+        name: data.name,
+        specialty: data.specialty,
+        organization: data.organization || undefined,
+        address: data.address,
+        phone: data.phone,
+        email: data.email,
+        lastVisit: new Date().toISOString().split('T')[0],
+        accessLevel: data.accessLevel,
+        status: "active"
+      };
+      
+      // In a real implementation, you would add this to the database
+      // providers.push(newProvider);
+      
+      toast.success("Provider added successfully!");
+      form.reset();
+      setAddProviderOpen(false);
+    } catch (error) {
+      console.error("Error adding provider:", error);
+      toast.error("Failed to add provider. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -181,7 +250,10 @@ const Providers = () => {
         <div className="medical-container">
           <div className="flex flex-wrap items-center justify-between mb-8">
             <h1 className="page-title">Healthcare Providers</h1>
-            <Button className="bg-medical-purple hover:bg-purple-700">
+            <Button 
+              className="bg-medical-purple hover:bg-purple-700"
+              onClick={() => setAddProviderOpen(true)}
+            >
               <UserPlus size={16} className="mr-1" /> Add Provider
             </Button>
           </div>
@@ -216,7 +288,7 @@ const Providers = () => {
                   <Building2 className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                   <h3 className="text-xl font-medium text-gray-500 mb-2">No active providers found</h3>
                   <p className="text-gray-400 mb-6">Try adjusting your search</p>
-                  <Button>
+                  <Button onClick={() => setAddProviderOpen(true)}>
                     <Plus size={16} className="mr-1" /> Add New Provider
                   </Button>
                 </div>
@@ -237,6 +309,144 @@ const Providers = () => {
           </Tabs>
         </div>
       </main>
+      
+      <Dialog open={addProviderOpen} onOpenChange={setAddProviderOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Healthcare Provider</DialogTitle>
+            <DialogDescription>
+              Enter the details of the healthcare provider you want to add to your network.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAddProvider)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Provider Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Dr. John Smith or Hospital Name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="specialty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Specialty</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Cardiology, Primary Care" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="organization"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Hospital or Practice Name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="123 Medical Plaza, San Francisco, CA" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="provider@example.com" {...field} type="email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="accessLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Access Level</FormLabel>
+                    <FormControl>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        {...field}
+                      >
+                        <option value="Full">Full Access</option>
+                        <option value="Limited">Limited Access</option>
+                        <option value="Specific Records">Specific Records Only</option>
+                        <option value="None">No Access</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter className="mt-6">
+                <Button type="button" variant="outline" onClick={() => setAddProviderOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-medical-purple hover:bg-purple-700"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Adding..." : "Add Provider"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
