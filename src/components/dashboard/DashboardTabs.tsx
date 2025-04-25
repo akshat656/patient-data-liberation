@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppointmentCard } from "./AppointmentCard";
 import MedicalRecordCard from "@/components/MedicalRecordCard";
+import { useState } from "react";
 
 interface DashboardTabsProps {
   recentRecords: any[];
@@ -17,6 +18,16 @@ export function DashboardTabs({
   onShareRecord,
   onViewRecord 
 }: DashboardTabsProps) {
+  const [appointments, setAppointments] = useState(upcomingAppointments);
+
+  const handleVerifyAppointment = (appointmentId: string) => {
+    setAppointments(appointments.map(appointment => 
+      appointment.id === appointmentId 
+        ? { ...appointment, verified: true } 
+        : appointment
+    ));
+  };
+
   return (
     <Tabs defaultValue="records" className="space-y-4">
       <TabsList>
@@ -40,8 +51,12 @@ export function DashboardTabs({
       
       <TabsContent value="appointments">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {upcomingAppointments.map(appointment => (
-            <AppointmentCard key={appointment.id} {...appointment} />
+          {appointments.map(appointment => (
+            <AppointmentCard 
+              key={appointment.id} 
+              {...appointment} 
+              onVerify={handleVerifyAppointment}
+            />
           ))}
         </div>
       </TabsContent>
