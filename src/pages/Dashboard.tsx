@@ -69,7 +69,11 @@ const Dashboard = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [records, setRecords] = useState(recentRecords);
+  const [records, setRecords] = useState(() => {
+    // Try to load records from localStorage on initial load
+    const savedRecords = localStorage.getItem('medicalRecords');
+    return savedRecords ? JSON.parse(savedRecords) : recentRecords;
+  });
   
   const handleShareRecord = (record: any) => {
     setSelectedRecord(record);
@@ -77,7 +81,11 @@ const Dashboard = () => {
   };
   
   const handleAddRecord = (newRecord: any) => {
-    setRecords([newRecord, ...records]);
+    const updatedRecords = [newRecord, ...records];
+    setRecords(updatedRecords);
+    
+    // Save to localStorage to persist across page navigation
+    localStorage.setItem('medicalRecords', JSON.stringify(updatedRecords));
   };
 
   return (

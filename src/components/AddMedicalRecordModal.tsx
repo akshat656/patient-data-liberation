@@ -25,6 +25,7 @@ export default function AddMedicalRecordModal({ isOpen, onClose, onAddRecord }: 
   const [provider, setProvider] = useState("");
   const [recordType, setRecordType] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [fileDataUrl, setFileDataUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -36,7 +37,7 @@ export default function AddMedicalRecordModal({ isOpen, onClose, onAddRecord }: 
     const blockchainId = `0x${Array.from({ length: 20 }, () => 
       Math.floor(Math.random() * 16).toString(16)).join('')}`;
     
-    // Create new record object
+    // Create new record object with file data
     const newRecord = {
       id: `rec${Date.now().toString().slice(-6)}`,
       title,
@@ -44,7 +45,9 @@ export default function AddMedicalRecordModal({ isOpen, onClose, onAddRecord }: 
       type: recordType,
       date: new Date().toISOString().split("T")[0],
       verified: false,
-      blockchainId
+      blockchainId,
+      fileData: fileDataUrl,
+      fileName: file?.name || "Unknown file"
     };
 
     // Simulate blockchain transaction
@@ -65,16 +68,32 @@ export default function AddMedicalRecordModal({ isOpen, onClose, onAddRecord }: 
     setProvider("");
     setRecordType("");
     setFile(null);
+    setFileDataUrl(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      
+      // Read the file and convert it to a data URL for storage
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          setFileDataUrl(event.target.result);
+        }
+      };
+      reader.readAsDataURL(selectedFile);
     }
   };
 
+  // When modal is closed, don't reset the form data
+  const handleCloseModal = () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleCloseModal()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New Medical Record</DialogTitle>
@@ -131,11 +150,16 @@ export default function AddMedicalRecordModal({ isOpen, onClose, onAddRecord }: 
                 accept=".pdf,.jpg,.jpeg,.png"
                 required
               />
+              {file && (
+                <p className="text-sm text-green-600">
+                  File selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                </p>
+              )}
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={onClose}>
+            <Button variant="outline" type="button" onClick={handleCloseModal}>
               Cancel
             </Button>
             <Button 

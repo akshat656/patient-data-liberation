@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -99,7 +98,12 @@ const Records = () => {
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [recordType, setRecordType] = useState<string>("all");
-  const [records, setRecords] = useState(allRecords);
+  
+  // Initialize records from localStorage or use mock data
+  const [records, setRecords] = useState(() => {
+    const savedRecords = localStorage.getItem('medicalRecords');
+    return savedRecords ? JSON.parse(savedRecords) : allRecords;
+  });
   
   const handleShareRecord = (record: any) => {
     setSelectedRecord(record);
@@ -107,7 +111,11 @@ const Records = () => {
   };
 
   const handleAddRecord = (newRecord: any) => {
-    setRecords([newRecord, ...records]);
+    const updatedRecords = [newRecord, ...records];
+    setRecords(updatedRecords);
+    
+    // Save to localStorage to persist across page navigation
+    localStorage.setItem('medicalRecords', JSON.stringify(updatedRecords));
   };
   
   const filteredRecords = searchBlockchainData(
