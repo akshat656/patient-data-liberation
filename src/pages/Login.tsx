@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -213,7 +214,8 @@ const Login = () => {
             phone: data.phone || null,
             address: data.address || null,
             specialization: data.specialization || null,
-            licenseNumber: data.licenseNumber || null
+            licenseNumber: data.licenseNumber || null,
+            isVerified: false // Providers need verification
           },
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
@@ -223,7 +225,7 @@ const Login = () => {
         toast.error(error.message);
       } else {
         toast.success(`${data.userType.charAt(0).toUpperCase() + data.userType.slice(1)} account registered! Please check your email to confirm.`);
-        toast.info("A unique blockchain identity has been created for your provider account.");
+        toast.info("Your provider account will be verified by an administrator.");
         providerForm.reset();
       }
     } catch (error: any) {
